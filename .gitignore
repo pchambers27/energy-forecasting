@@ -46,3 +46,7 @@ Thumbs.db
 .replit
 .pythonlibs/
 .cache/
+
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/

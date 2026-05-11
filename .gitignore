@@ -29,6 +29,7 @@ ENV/
 *.parquet
 *.h5
 *.hdf5
+*.duckdb
 
 # Logs
 *.log

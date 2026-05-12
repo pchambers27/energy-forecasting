@@ -122,7 +122,7 @@ def ingest_region(con: duckdb.DuckDBPyConnection, region: str, start: datetime, 
     rows = []
     for rec in fetch_demand(region, effective_start, end): 
       rows.append((
-        rec["period"],
+        datetime.strptime(rec["period"], "%Y-%m-%dT%H"),
         rec.get("respondent"),
         rec.get("respondent-name"),
         rec.get("type"),

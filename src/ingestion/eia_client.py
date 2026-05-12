@@ -3,8 +3,7 @@
 Fetches hourly demand for specified balancing authorities (regions), handles pagination + retries, lands raw records into DuckDB."""
 
 from __future__ import annotations
-from jinja2.defaults import BLOCK_START_STRING
-from dbt.adapters.record.base import AdapterAddQueryRecord
+
 
 import os
 import time
@@ -17,7 +16,7 @@ import duckdb
 
 logger = logging.getLogger(__name__) 
 
-logging.basicConfig(level=logging.INFO), format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 EIA_BASE_URL = "https://api.eia.gov/v2/electricity/rto/region-data/data/"
 PAGE_SIZE = 5000 # EIA max per request
@@ -35,9 +34,12 @@ def _get_api_key() -> str:
 
 def _request_with_retry(params: dict) -> dict: """GET with exponential backoff on transient errors"""
     for attempt in range(MAX_RETRIES):
-        try: r = requests.get(EIA_BASE_URL, params=params, timeout=30) r.raise_for_status() 
+        try: 
+          r = requests.get(EIA_BASE_URL, params=params, timeout=30) 
+          r.raise_for_status() 
             return r.json()
-        except (requests.RequestException, ValueError) as e: wait = BACKOFF_BASE ** attempt
+        except (requests.RequestException, ValueError) 
+            as e: wait = BACKOFF_BASE ** attempt
         
 logger.warning(f"Request failed (attempt {attempt + 1}/{MAX_RETRIES}) {e}. Retrying in {wait}s...")
 time.sleep(wait)
@@ -46,8 +48,8 @@ raise RuntimeError(f"EIA request failed after {MAX_RETRIES} attempts")
 
 
 
-def fetch_demand(region: str, start: datetime, end: datetime) -> Iterator[dict]: """Yield hourly demand records for a region between start and end (UTC).
-EIA returns records with: period (timestamp), respondent (region code), type (D= demand), value(MWh), value-units."""
+def fetch_demand(region: str, start: datetime, end: datetime) -> Iterator[dict]: 
+  """Yield hourly demand records for a region between start and end (UTC).EIA returns records with: period (timestamp), respondent (region code), type (D= demand), value(MWh), value-units."""
   api_key = _get_api_key()
   offset = 0
   total_fetched =0
@@ -95,8 +97,9 @@ def ensure_raw_table(con: duckdb.DuckDBPyConnection) -> None:
         value DOUBLE,
         value_units VARCHAR,
         ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (period_utc, respondent, type_code)
-      ))""")
+        PRIMARY KEY (period_utc, respondent, type_code))
+        """
+      )
 
 
 def get_last_timestamp(con: duckdb.DuckDBPyConnection, region: str) -> datetime | None:
@@ -105,7 +108,8 @@ def get_last_timestamp(con: duckdb.DuckDBPyConnection, region: str) -> datetime 
    return row[0] if row and row[0] else None
 
 
-def ingest_region(con: duckdb.DuckDBPyConnection, region: str, start: datetime, end: datetime) -> int: """Ingest hourly demand for a region. Resumes from last ingested timestamp."""
+def ingest_region(con: duckdb.DuckDBPyConnection, region: str, start: datetime, end: datetime) -> int: 
+    """Ingest hourly demand for a region. Resumes from last ingested timestamp."""
     ensure_raw_table(con)
     last_ts = get_last_timestamp(con, region)
     effective_start = (last_ts + timedelta(hours=1)) if last_ts else start
@@ -136,13 +140,13 @@ def main():
 
   db_path = "/home/runner/workspace/data/warehouse_dev.duckdb"
 
-os.makedirs(os.path.dirname(db_path), exist_ok=True)
-con = duckdb.connect(db_path)
+  os.makedirs(os.path.dirname(db_path), exist_ok=True)
+  con = duckdb.connect(db_path)
 
-try: for region in regions:
-  ingest_region(con, region, start, end)
-finally:
-  con.close()
+  try: for region in regions:
+    ingest_region(con, region, start, end)
+  finally:
+    con.close()
 
 
 if __name__ == "__main__": main()

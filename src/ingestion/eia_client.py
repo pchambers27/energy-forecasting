@@ -114,27 +114,27 @@ def ingest_region(con: duckdb.DuckDBPyConnection, region: str, start: datetime, 
     ensure_raw_table(con)
     last_ts = get_last_timestamp(con, region)
     effective_start = (last_ts + timedelta(hours=1)) if last_ts else start
-        if effective_start >= end: 
-          logger.info(f"[{region}] already up to date through {last_ts}") 
-          return 0
-      logger.info(f"[{region}] ingesting {effective_start} -> {end}")
-      rows = []
-      for rec in fetch_demand(region, effective_start, end): 
-        rows.append((
+    
+    if effective_start >= end: 
+      logger.info(f"[{region}] already up to date through {last_ts}") 
+      return 0
+    logger.info(f"[{region}] ingesting {effective_start} -> {end}")
+    rows = []
+    for rec in fetch_demand(region, effective_start, end): 
+      rows.append((
         rec["period"],
         rec.get("respondent"),
         rec.get("respondent-name"),
         rec.get("type"),
         rec.get("type-name"),
         float(rec["value"]) if rec.get("value") is not None else None,
-        rec.get("value-units"),
-        ))
-      if not rows: 
-        logger.info(f"[{region}] no new records found") 
-        return 0
-      con.executemany("""INSERT OR IGNORE INTO raw_eia.raw_demand (period_utc, respondent, respondent_name, type_code, type_name, value, value_units) VALUES (?, ?, ?, ?, ?, ?, ?)""", rows)
-      logger.info(f"[{region}] inserted {len(rows)} rows")
-      return len(rows)
+        rec.get("value-units"),))
+    if not rows: 
+      logger.info(f"[{region}] no new records found") 
+      return 0
+    con.executemany("""INSERT OR IGNORE INTO raw_eia.raw_demand (period_utc, respondent, respondent_name, type_code, type_name, value, value_units) VALUES (?, ?, ?, ?, ?, ?, ?)""", rows)
+    logger.info(f"[{region}] inserted {len(rows)} rows")
+    return len(rows)
 
 
 def main():

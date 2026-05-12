@@ -25,7 +25,7 @@ LOCATIONS = {
   "SWPP": {"city": "Oklahoma City", "lat": 35.4676, "lon": -97.5164},
 }
 
-HOURLY_CARS = [
+HOURLY_VARS = [
   "temperature_2m",
   "relative_humidity_2m",
   "wind_speed_10m",
@@ -96,7 +96,7 @@ def ensure_raw_table(con: duckdb.DuckDBPyConnection) -> None:
 
 def get_last_timestamp(con: duckdb.DuckDBPyConnection, region: str) -> datetime | None:
   row = con.execute("SELECT MAX(period_utc) FROM raw_weather.raw_hourly WHERE region = ?", [region],).fetchone()
-  return row[0] if row and row[0] else None
+  return row[0].replace(tzinfo=timezone.utc) if row and row[0] else None
 
 
 def ingest_region(
@@ -105,31 +105,31 @@ def ingest_region(
   loc = LOCATIONS[region]
   last_ts = get_last_timestamp(con, region)
   effective_start = (last_ts + timedelta(hours=1)) if last_ts else start
-    if effective_start >= end:
-      logger.info(f"[{region}] already up to date through {last_ts}")
-      return 0
-    logger.info(f"[{region}] ingesting {effective_start} -> {end}")
-    rows = []
-    for rec in fetch_weather(loc["lat"], loc["lon"], effective_start, end):
-      row.append((
-        rec["period_utc"],
-        region,
-        loc["city"],
-        loc["lat"],
-        loc["lon"],
-        rec["temperature_2m"],
-        rec["relative_humidity_2m"],
-        rec["wind_speed_10m"],
-        rec["cloud_cover"],
-        rec["shortwave_radiation"],
+  if effective_start >= end:
+    logger.info(f"[{region}] already up to date through {last_ts}")
+    return 0
+  logger.info(f"[{region}] ingesting {effective_start} -> {end}")
+  rows = []
+  for rec in fetch_weather(loc["lat"], loc["lon"], effective_start, end):
+    rows.append((
+      rec["period_utc"],
+      region,
+      loc["city"],
+      loc["lat"],
+      loc["lon"],
+      rec["temperature_2m"],
+      rec["relative_humidity_2m"],
+      rec["wind_speed_10m"],
+      rec["cloud_cover"],
+      rec["shortwave_radiation"],
       ))
-    if not rows: 
-      logger.warning(f"[{region}] API returned 0 rows - check params")
-      return 0
-    con.executemany("""
+  if not rows: 
+    logger.warning(f"[{region}] API returned 0 rows - check params")
+    return 0
+  con.executemany("""
     INSERT OR IGNORE INTO raw_weather.raw_hourly (period_utc, region, city, latitude, longitude, temperature_2m, relative_humidity_2m, wind_speed_10m, cloud_cover, shortwave_radiation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", rows)
-    logger.info(f"[{region}] inserted {len(rows)} rows")
-    return len(rows)
+  logger.info(f"[{region}] inserted {len(rows)} rows")
+  return len(rows)
 
 
 def main():

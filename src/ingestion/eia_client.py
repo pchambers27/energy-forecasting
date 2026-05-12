@@ -32,18 +32,19 @@ def _get_api_key() -> str:
 
 
 
-def _request_with_retry(params: dict) -> dict: """GET with exponential backoff on transient errors"""
+def _request_with_retry(params: dict) -> dict: 
+    """GET with exponential backoff on transient errors"""
     for attempt in range(MAX_RETRIES):
         try: 
           r = requests.get(EIA_BASE_URL, params=params, timeout=30) 
           r.raise_for_status() 
-            return r.json()
-        except (requests.RequestException, ValueError) 
-            as e: wait = BACKOFF_BASE ** attempt
+          return r.json()
+        except (requests.RequestException, ValueError) as e: 
+          wait = BACKOFF_BASE ** attempt
         
-logger.warning(f"Request failed (attempt {attempt + 1}/{MAX_RETRIES}) {e}. Retrying in {wait}s...")
-time.sleep(wait)
-raise RuntimeError(f"EIA request failed after {MAX_RETRIES} attempts")
+          logger.warning(f"Request failed (attempt {attempt + 1}/{MAX_RETRIES}) {e}. Retrying in {wait}s...")
+          time.sleep(wait)
+    raise RuntimeError(f"EIA request failed after {MAX_RETRIES} attempts")
 
 
 
@@ -113,24 +114,27 @@ def ingest_region(con: duckdb.DuckDBPyConnection, region: str, start: datetime, 
     ensure_raw_table(con)
     last_ts = get_last_timestamp(con, region)
     effective_start = (last_ts + timedelta(hours=1)) if last_ts else start
-        if effective_start >= end: logger.info(f"[{region}] already up to date through {last_ts}") return 0
-        logger.info(f"[{region}] ingesting {effective_start} -> {end}")
-        rows = []
-        for rec in fetch_demand(region, effective_start, end): rows.append((
-          rec["period"],
-          rec.get("respondent"),
-          rec.get("respondent-name"),
-          rec.get("type"),
-          rec.get("type-name"),
-          float(rec["value"]) if rec.get("value") is not None else None,
-          rec.get("value-units"),
+        if effective_start >= end: 
+          logger.info(f"[{region}] already up to date through {last_ts}") 
+          return 0
+      logger.info(f"[{region}] ingesting {effective_start} -> {end}")
+      rows = []
+      for rec in fetch_demand(region, effective_start, end): 
+        rows.append((
+        rec["period"],
+        rec.get("respondent"),
+        rec.get("respondent-name"),
+        rec.get("type"),
+        rec.get("type-name"),
+        float(rec["value"]) if rec.get("value") is not None else None,
+        rec.get("value-units"),
         ))
-        if not rows: logger.info(f"[{region}] no new records found") return 0
-        con.executemany("""INSERT OR IGNORE INTO raw_eia.raw_demand
-          (period_utc, respondent, respondent_name, type_code, type_name, value, value_units)
-          VALUES (?, ?, ?, ?, ?, ?, ?)""", rows)
-        logger.info(f"[{region}] inserted {len(rows)} rows")
-        return len(rows)
+      if not rows: 
+        logger.info(f"[{region}] no new records found") 
+        return 0
+      con.executemany("""INSERT OR IGNORE INTO raw_eia.raw_demand (period_utc, respondent, respondent_name, type_code, type_name, value, value_units) VALUES (?, ?, ?, ?, ?, ?, ?)""", rows)
+      logger.info(f"[{region}] inserted {len(rows)} rows")
+      return len(rows)
 
 
 def main():
@@ -143,8 +147,9 @@ def main():
   os.makedirs(os.path.dirname(db_path), exist_ok=True)
   con = duckdb.connect(db_path)
 
-  try: for region in regions:
-    ingest_region(con, region, start, end)
+  try: 
+    for region in regions:
+      ingest_region(con, region, start, end)
   finally:
     con.close()
 

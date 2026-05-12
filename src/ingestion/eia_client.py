@@ -130,7 +130,7 @@ def ingest_region(con: duckdb.DuckDBPyConnection, region: str, start: datetime, 
         float(rec["value"]) if rec.get("value") is not None else None,
         rec.get("value-units"),))
     if not rows: 
-      logger.info(f"[{region}] no new records found") 
+      logger.warning(f"[{region}] API returned 0 rows for {effective_start} -> {end} - check the region code") 
       return 0
     con.executemany("""INSERT OR IGNORE INTO raw_eia.raw_demand (period_utc, respondent, respondent_name, type_code, type_name, value, value_units) VALUES (?, ?, ?, ?, ?, ?, ?)""", rows)
     logger.info(f"[{region}] inserted {len(rows)} rows")
@@ -138,7 +138,7 @@ def ingest_region(con: duckdb.DuckDBPyConnection, region: str, start: datetime, 
 
 
 def main():
-  regions = ["SPP", "ERCO"]
+  regions = ["SWPP", "ERCO"]
   end = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
   start = end - timedelta(days=365 * 5)
 

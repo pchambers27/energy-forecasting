@@ -106,7 +106,7 @@ def ensure_raw_table(con: duckdb.DuckDBPyConnection) -> None:
 def get_last_timestamp(con: duckdb.DuckDBPyConnection, region: str) -> datetime | None:
    """Return the most recent period_utc for a region, or None if empty."""
    row = con.execute("SELECT MAX(period_utc) FROM raw_eia.raw_demand WHERE respondent = ?", [region],).fetchone()
-   return row[0] if row and row[0] else None
+   return row[0].replace(tzinfo=timezone.utc) if row and row[0] else None
 
 
 def ingest_region(con: duckdb.DuckDBPyConnection, region: str, start: datetime, end: datetime) -> int: 

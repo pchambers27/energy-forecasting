@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: stg_weather__hourly
+  - name: stg_weather_hourly
     description: "Cleaned hourly weather by region, UTC timestamps"
     columns:
       - name: period_utc

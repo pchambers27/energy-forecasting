@@ -19,4 +19,4 @@ renamed as (
    and value is not null
    and value > 0 -- demand can't be 0
 )
-select * from
+select * from renamed

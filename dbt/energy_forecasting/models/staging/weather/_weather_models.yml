@@ -1,4 +1,4 @@
-version 2
+version: 2
 
 models:
   - name: stg_weather__hourly
@@ -13,5 +13,5 @@ models:
           - accepted_values:
               values: ['ERCO', 'SWPP']
     tests:
-      - dbt_utils.uniqe_combination_of_columns:
+      - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [period_utc, region]

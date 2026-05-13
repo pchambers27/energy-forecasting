@@ -7,7 +7,7 @@ with source as (
 renamed as (
   select
     -- Cast naive timestamp to TZ-aware UTC
-    cast (period_utc as timestamptz) as time zone 'UTC' as period_utc,
+    cast(period_utc as timestamptz) as period_utc,
     region,
     city,
     latitude,

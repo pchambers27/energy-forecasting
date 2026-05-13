@@ -7,7 +7,7 @@ with source as (
 renamed as (
   select
     -- Cast naive timestamp to TZ-aware UTC
-    cast (period_utc as timestamptz) as time zone 'UTC' as period_utc,
+    cast(period_utc as timestamptz) as period_utc,
     respondent as region,
     respondent_name as region_name,
     type_code,
@@ -19,3 +19,4 @@ renamed as (
    and value is not null
    and value > 0 -- demand can't be 0
 )
+select * from

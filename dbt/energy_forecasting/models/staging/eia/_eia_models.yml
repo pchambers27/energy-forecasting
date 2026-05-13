@@ -1,7 +1,7 @@
-version 2
+version: 2
 
 models:
-  - name: stg_eia__demand
+  - name: stg_eia_demand
     description: "Cleaned hourly demand by region, UTC timestamps"
     columns:
       - name: period_utc
@@ -11,7 +11,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['ERCO', 'SWP']
+              values: ['ERCO', 'SWPP']
       - name:  demand_mwh
         tests:
           - not_null

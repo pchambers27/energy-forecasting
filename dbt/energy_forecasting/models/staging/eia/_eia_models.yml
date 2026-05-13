@@ -1,0 +1,20 @@
+version 2
+
+models:
+  - name: stg_eia__demand
+    description: "Cleaned hourly demand by region, UTC timestamps"
+    columns:
+      - name: period_utc
+        tests:
+          - not_null
+      - name: region
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['ERCO', 'SWP']
+      - name:  demand_mwh
+        tests:
+          - not_null
+    tests: 
+     - dbt_utils.unique_combination_of_columns:
+         combination_of_columns: [period_utc, region]

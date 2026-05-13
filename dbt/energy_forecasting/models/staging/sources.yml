@@ -1,0 +1,29 @@
+version 2
+
+sources:
+  - name: raw_eia
+   description: "Raw EIA v2 API responses, hourly demand"
+   schema: raw_eia
+   tables:
+    - name: raw_demand
+      description: "Hourly demand by balancing authority"
+      columns:
+        - name: period_utc
+          tests:
+            - not_null
+        - name: respondent
+          tests:
+            - not_null
+  - name: raw_weather
+    description: "Raw Open-Meteo archive responses, hourly weather"
+    schema: raw_weather
+    tables:
+      - name: raw_hourly
+        description: "Hourly weather by region/city"
+        columns:
+          - name: period_utc
+            tests:
+              - not_null
+          - name: region
+            tests:
+              - not_null

@@ -1,0 +1,17 @@
+version 2
+
+models:
+  - name: stg_weather__hourly
+    description: "Cleaned hourly weather by region, UTC timestamps"
+    columns:
+      - name: period_utc
+        tests:
+          - not_null
+      - name: region
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['ERCO', 'SWPP']
+    tests:
+      - dbt_utils.uniqe_combination_of_columns:
+          combination_of_columns: [period_utc, region]

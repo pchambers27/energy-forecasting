@@ -1,0 +1,11 @@
+energy_forecasting:
+  outputs:
+    dev:
+      type: duckdb
+      path: /home/runner/workspace/data/warehouse_dev.duckdb
+      threads: 4
+    prod:
+      type: duckdb
+      path: /home/runner/workspace/data/warehouse.duckdb
+      threads: 4
+  target: dev

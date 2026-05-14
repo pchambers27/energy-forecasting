@@ -61,8 +61,8 @@ def test_test_windows_dont_overlap_within_region():
 
 if __name__ == "__main__":
 
-test_splits_have_correct_structure()
-test_no_leakage_gap()
-test_train_before_test()
-test_test_windows_dont_overlap_within_region()
-print("✓ All splitter tests passed")
+  test_splits_have_correct_structure()
+  test_no_leakage_gap()
+  test_train_before_test()
+  test_test_windows_dont_overlap_within_region()
+  print("✓ All splitter tests passed")

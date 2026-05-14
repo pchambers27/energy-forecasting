@@ -34,7 +34,7 @@ def run_backtest(
   metric_rows = []
   for split in splits:
     region_df = df[df["region"] == split.region].copy()
-    train_mask = (region_df["period_utc"] >= split.train_start & (region_df["period_utc"] <= split.train_end)
+    train_mask = (region_df["period_utc"] >= split.train_start) & (region_df["period_utc"] <= split.train_end)
     test_mask = (region_df["period_utc"] >= split.test_start) & (region_df["period_utc"] <= split.test_end)
     train_df = region_df[train_mask]
     test_df = region_df[test_mask].sort_values("period_utc").reset_index(drop=True)
@@ -42,7 +42,7 @@ def run_backtest(
       logger.warning(f"Empty test set for {split} - skipping")
       continue
     y_true = test_df.set_index("period_utc")["demand_mwh"]
-    for name, forecaster in forecasters.item():
+    for name, forecaster in forecasters.items():
       forecaster.fit(train_df)
       y_pred = forecaster.predict(y_true.index)
       for ts, actual, pred in zip(y_true.index, y_true.values, y_pred.values):
@@ -61,7 +61,7 @@ def run_backtest(
         "fold": split.fold,
         **m.as_dict()
       })
-  logger.info(f" ✓ {split}")
+    logger.info(f" ✓ {split}")
   predictions_df = pd.DataFrame(pred_rows)
   metrics_df = pd.DataFrame(metric_rows)
   return predictions_df, metrics_df
@@ -94,8 +94,9 @@ def summarize(
       "bias": weighted_mean(group, "bias"),
     })
   summary = pd.DataFrame(rows)
-  if baseline is not None: baseline_maes = (
-    summary[summary["forecaster"] == baseline].set_index("region")["mae"].to_dict()
+  if baseline is not None: 
+    baseline_maes = (
+      summary[summary["forecaster"] == baseline].set_index("region")["mae"].to_dict()
   )
     summary["skill_vs_" + baseline] = summary.apply(
       lambda r:

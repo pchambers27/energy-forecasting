@@ -39,16 +39,16 @@ def make_splits(
   n_folds: int = 12,
   min_train_hours: int = 24 * 365,
 ) -> Iterator[Split]:
-   """Yield expanding-window splits, one per fold per region. 
-   Args:
-     df: long-format dataframe with at least region_col and time_col
-     horizon_hours: forecast horizon (gap between train and test start)
-     test_window_hours: length of test window
-     n_folds: number of folds to generate
-     min_train_hours: minimum length of training window
+  """Yield expanding-window splits, one per fold per region. 
+  Args:
+    df: long-format dataframe with at least region_col and time_col
+    horizon_hours: forecast horizon (gap between train and test start)
+    test_window_hours: length of test window
+    n_folds: number of folds to generate
+    min_train_hours: minimum length of training window
     The most recent test window is fold 0; older folds have higher fold numbers.
     This makes it easy to "use fold 0 for final eval, 1..N for tuning."
-    """
+  """
   for region, group in df.groupby(region_col):
     times = group[time_col].sort_values().reset_index(drop=True)
     if len(times) < min_train_hours + horizon_hours + test_window_hours:
@@ -69,4 +69,4 @@ def make_splits(
         train_end=train_end,
         test_start=test_start,
         test_end=test_end,
-          )
+      )

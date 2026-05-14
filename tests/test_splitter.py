@@ -11,7 +11,7 @@ def load_marts() -> pd.DataFrame:
   df = con.execute("""
   SELECT period_utc, region, demand_mwh
   FROM main_marts.fct_hourly_demand
-  ORDER BY region, preiod_utc""").df()
+  ORDER BY region, period_utc""").df()
   con.close()
   return df
 
@@ -50,7 +50,7 @@ def test_train_before_test():
 def test_test_windows_dont_overlap_within_region():
   """Within a region, test windows must not overlap."""
   df = load_marts()
-  by_region = dict[str, list] = {}
+  by_region = {}
   for split in make_splits(df):
      by_region.setdefault(split.region, []).append(split)
   for region, splits in by_region.items():

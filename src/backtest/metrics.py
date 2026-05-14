@@ -3,7 +3,7 @@
 All metrics handle NaN predictions and NaN actuals by dropping those rows *pairwise* before computing. Predicitions or actuals with mismatched lengths will raise."""
 
 from __future__ import annotations
-from pandas.core.config_init import float_format_doc
+
 
 from dataclasses import dataclass
 import numpy as np
@@ -45,24 +45,24 @@ def compute_metrics(y_true: pd.Series, y_pred: pd.Series) -> Metrics:
 
   if n_valid == 0:
     return Metrics(n=0, n_dropped=n_dropped, mae=np.nan, rmse=np.nan, mape=np.nan, bias=np.nan)
-    err = df["y_pred"] - df["y_true"]
-    abs_err = err.abs()
-    mae = abs_err.mean()
-    rmse = np.sqrt((err ** 2).mean())
-    bias = err.mean()
-    nonzero = df[df["y_true"] != 0]
-    if len(nonzero) > 0:
-      mape = ((nonzero["y_pred"] - nonzero["y_true"]).abs() / nonzero["y_true"].abs()).mean() * 100
-    else:
-      mape = np.nan
-    return Metrics(
-      n=n_valid,
-      n_dropped=n_dropped,
-      mae=float(mae),
-      rmse=float(rmse),
-      mape=float(mape),
-      bias=float(bias),
-    )
+  err = df["y_pred"] - df["y_true"]
+  abs_err = err.abs()
+  mae = abs_err.mean()
+  rmse = np.sqrt((err ** 2).mean())
+  bias = err.mean()
+  nonzero = df[df["y_true"] != 0]
+  if len(nonzero) > 0:
+    mape = ((nonzero["y_pred"] - nonzero["y_true"]).abs() / nonzero["y_true"].abs()).mean() * 100
+  else:
+    mape = np.nan
+  return Metrics(
+    n=n_valid,
+    n_dropped=n_dropped,
+    mae=float(mae),
+    rmse=float(rmse),
+    mape=float(mape),
+    bias=float(bias),
+  )
 
 
 def skill_score(model_mae: float, baseline_mae: float) -> float:

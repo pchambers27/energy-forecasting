@@ -11,6 +11,7 @@ import pandas as pd
 
 from src.backtest.baselines import SeasonalNaive
 from src.backtest.runner import run_backtest, summarize
+from src.backtest.models import RidgeForecaster
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 def load_data() -> pd.DataFrame:
   con = duckdb.connect("/home/runner/workspace/data/warehouse_dev.duckdb")
   df = con.execute("""
-    SELECT period_utc, region, demand_mwh
+    SELECT period_utc, region, demand_mwh, temp_c, humidity_pct, wind_ms, cloud_pct, solar_wm2
     FROM main_marts.fct_hourly_demand
     ORDER BY region, period_utc""").df()
   con.close()
@@ -29,7 +30,8 @@ def main():
   logger.info(f"Loaded {len(df)} rows across {df['region'].nunique()} region(s)")
   forecasters = {
     "weekly_naive": SeasonalNaive(period_hours=168, name="weekly_naive"),
-    "seasonal_naive": SeasonalNaive(period_hours=8760, name="annual_naive"),
+    "annual_naive": SeasonalNaive(period_hours=8760, name="annual_naive"),
+    "ridge": RidgeForecaster(alpha=1.0, name="ridge"),
   }
   predictions_df, metrics_df = run_backtest(
     df,
@@ -46,9 +48,9 @@ def main():
 
   print(summary.to_string(index=False))
 
-  predictions_df.to_parquet("/home/runner/workspace/data/baseline_predictions.parquet", index=False)
-  metrics_df.to_parquet("/home/runner/workspace/data/baseline_fold_metrics.parquet", index=False)
-  summary.to_parquet("/home/runner/workspace/data/baseline_summary.parquet", index=False)
+  predictions_df.to_parquet("/home/runner/workspace/data/phase3_predictions.parquet", index=False)
+  metrics_df.to_parquet("/home/runner/workspace/data/phase3_fold_metrics.parquet", index=False)
+  summary.to_parquet("/home/runner/workspace/data/phase3_summary.parquet", index=False)
   logger.info("Wrote results to data/baseline_*parquet")
 
 

@@ -43,6 +43,8 @@ def run_backtest(
       continue
     y_true = test_df.set_index("period_utc")["demand_mwh"]
     for name, forecaster in forecasters.items():
+      if hasattr(forecaster, "set_context"):
+        forecaster.set_context(region_df)
       forecaster.fit(train_df)
       y_pred = forecaster.predict(y_true.index)
       for ts, actual, pred in zip(y_true.index, y_true.values, y_pred.values):

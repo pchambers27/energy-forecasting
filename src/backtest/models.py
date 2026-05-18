@@ -22,6 +22,11 @@ try:
 except (ImportError, OSError):
     _HAS_LGBM = False
 
+class LGBMForecaster:
+    def fit(self, train_df):
+        if not _HAS_LGBM:
+            raise RuntimeError("LGBMForecaster requires lightgbm to be installed")
+
 
 class RidgeForecaster:
     """StandardScaler → Ridge regression on calendar + weather features.

@@ -92,7 +92,7 @@ class GBMForecaster:
         random_state: int = 42
     ):
         self.horizon_hours = horizon_hours
-        self.params = dict(n_estimators=n_estimators, learning_rate=learning_rate, random_state=)
+        self.params = dict(n_estimators=n_estimators, learning_rate=learning_rate, random_state=random_state)
         self.backend = "lightgbm" if _HAS_LGBM else "hist_gbm"
         self.name = name or f"gbm_{self.backend}"
         self._model = None
@@ -101,10 +101,10 @@ class GBMForecaster:
     def _new_model(self):
         if _HAS_LGBM:
             return  LGBMRegressor(**self.params, verbose=-1)
-            return HistGradientBoostingRegressor(
-                max_iter=self.params["n_estimators"],
-                learning_rate=self.params["learning_rate"],
-                random_state=self.params["random_state"],
+        return HistGradientBoostingRegressor(
+            max_iter=self.params["n_estimators"],
+            learning_rate=self.params["learning_rate"],
+            random_state=self.params["random_state"],
             )
 
     def fit(self, train_df: pd.DataFrame) -> None:

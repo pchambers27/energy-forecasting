@@ -125,3 +125,7 @@ class GBMForecaster:
             X_valid = wanted.loc[valid_mask, FEATURE_COLS]
             preds.loc[valid_mask] = self._model.predict(X_valid)
         return preds
+
+    def set_context(self, region_df: pd.DataFrame) -> None:
+        feats = build_features(region_df, horizon_hours=self.horizon_hours)
+        self._feature_lookup =  feats.set_index("period_utc")

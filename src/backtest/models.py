@@ -16,6 +16,12 @@ from sklearn.pipeline import Pipeline
 
 from src.backtest.features import build_features, split_X_y, FEATURE_COLS, TARGET_COL
 
+try:
+    from lightgbm import LGBMRegressor
+    _HAS_LGBM = True
+except (ImportError, OSError):
+    _HAS_LGBM = False
+
 
 class RidgeForecaster:
     """StandardScaler → Ridge regression on calendar + weather features.

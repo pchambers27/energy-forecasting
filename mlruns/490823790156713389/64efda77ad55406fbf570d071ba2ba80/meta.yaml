@@ -1,0 +1,14 @@
+artifact_uri: file:///home/runner/workspace/mlruns/490823790156713389/64efda77ad55406fbf570d071ba2ba80/artifacts
+end_time: 1779130150006
+entry_point_name: ''
+experiment_id: '490823790156713389'
+lifecycle_stage: active
+run_id: 64efda77ad55406fbf570d071ba2ba80
+run_name: gbm__ERCO
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779130149993
+status: 3
+tags: []
+user_id: runner

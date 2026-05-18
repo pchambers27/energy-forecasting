@@ -58,10 +58,10 @@ def main():
             skill_col = "skill_vs_weekly_naive"
             if skill_col in row and pd.notna(row[skill_col]):
                 mlflow.log_metric("skill_vs_weekly_naive", float(row[skill_col]))
-                predictions_df.to_parquet("/home/runner/workspace/data/phase3_predictions.parquet", index=False)
-                metrics_df.to_parquet("/home/runner/workspace/data/phase3_fold_metrics.parquet", index=False)
-                summary.to_parquet("/home/runner/workspace/data/phase3_summary.parquet", index=False)
-                logger.info(f"Logged {len(summary)} runs to MLflow experiment '{EXPERIMENT}'")
+    predictions_df.to_parquet("/home/runner/workspace/data/phase3_predictions.parquet", index=False)
+    metrics_df.to_parquet("/home/runner/workspace/data/phase3_fold_metrics.parquet", index=False)
+    summary.to_parquet("/home/runner/workspace/data/phase3_summary.parquet", index=False)
+    logger.info(f"Logged {len(summary)} runs to MLflow experiment '{EXPERIMENT}'")
 
 
 if __name__ == "__main__":

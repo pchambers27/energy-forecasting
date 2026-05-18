@@ -1,0 +1,14 @@
+artifact_uri: file:///home/runner/workspace/mlruns/490823790156713389/de983494a0844bd5a9697e5de74ae83e/artifacts
+end_time: 1779130150064
+entry_point_name: ''
+experiment_id: '490823790156713389'
+lifecycle_stage: active
+run_id: de983494a0844bd5a9697e5de74ae83e
+run_name: ridge__SWPP
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779130150051
+status: 3
+tags: []
+user_id: runner

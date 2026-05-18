@@ -1,0 +1,14 @@
+artifact_uri: file:///home/runner/workspace/mlruns/490823790156713389/23329e1bc03349dbac2a23b0cdbde60b/artifacts
+end_time: 1779130150035
+entry_point_name: ''
+experiment_id: '490823790156713389'
+lifecycle_stage: active
+run_id: 23329e1bc03349dbac2a23b0cdbde60b
+run_name: weekly_naive__ERCO
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779130150023
+status: 3
+tags: []
+user_id: runner

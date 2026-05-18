@@ -63,7 +63,26 @@ def test_ridge_beats_naive_in_sample_sanity():
     )
 
 
+def test_gbm_fits_and_predicts():
+    from src.backtest.models import GBMForecaster
+    df = load_region("ERCO")
+    cutoff = int(len(df) * 0.8)
+    train = df.iloc[:cutoff]
+    test = df.iloc[cutoff:cutoff + 168]
+    model = GBMForecaster()
+    model.set_context(df)
+    model.fit(train)
+    preds = model.predict(pd.DatetimeIndex(test["period_utc"]))
+    assert len(preds) == len(test)
+    assert preds.notna().sum() > 100
+    valid = preds.dropna()
+    assert valid.min() > 5000, f"Implausibly low prediction: {valid.min()}"
+    assert valid.max() < 120000, f"Implausibly high prediction: {valid.max()}"
+    print(f" GBM backend: {model.backend}")
+
+
 if __name__ == "__main__":
     test_ridge_fits_and_predicts()
     test_ridge_beats_naive_in_sample_sanity()
+    test_gbm_fits_and_predicts()
     print("All model tests passed ✓")

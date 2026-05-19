@@ -1,0 +1,14 @@
+artifact_uri: file:///home/runner/workspace/mlruns/490823790156713389/80b196bdd83946e3822f9d8e2373c1b1/artifacts
+end_time: 1779200899198
+entry_point_name: ''
+experiment_id: '490823790156713389'
+lifecycle_stage: active
+run_id: 80b196bdd83946e3822f9d8e2373c1b1
+run_name: weekly_naive__SWPP
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779200899185
+status: 3
+tags: []
+user_id: runner

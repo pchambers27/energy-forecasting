@@ -20,8 +20,7 @@ def _toy_df():
     })
 
 def test_unsafe_lag_raises():
-    """A lag shorter than the horizon must raise, not silently proceed."""
-    import pytest
+    """With the corrected rule, a horizon large enough that 48h < horizon + block must raise."""
     df = _toy_df()
     try:
         build_features(df, horizon_hours=48)
@@ -31,13 +30,13 @@ def test_unsafe_lag_raises():
 
 
 def test_lag_values_are_time_correct():
-    """demand_lag_24h at time t must equal demand at t-24h."""
+    """demand_lag_48h at time t must equal demand at t-48h."""
     df = _toy_df()
     f = build_features(df, horizon_hours=24)
     s = df.set_index("period_utc")["demand_mwh"]
-    row = f.iloc[350]
-    expected = s.loc[row["period_utc"] - pd.Timedelta(hours=24)]
-    assert np.isclose(row["demand_lag_24h"], expected)
+    row = f.iloc[380]
+    expected = s.loc[row["period_utc"] - pd.Timedelta(hours=48)]
+    assert np.isclose(row["demand_lag_48h"], expected)
 
 
 def test_all_feature_cols_present():

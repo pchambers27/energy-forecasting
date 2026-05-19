@@ -40,34 +40,40 @@ FEATURE_COLS = [
   "cooling_degrees",
   "heating_degrees",
   # Lag features (horizon-safe -- see build_features docstring)
-  "demand_lag_24h",
+  "demand_lag_48h",
   "demand_lag_168h",
   "demand_lag_336h",
-  "demand_roll_mean_168h_lag_24h",
-]
-
-_LAG_SPECS = [
-  ("demand_lag_24h", 24),
-  ("demand_lag_168h", 168),
-  ("demand_lag_336h", 336),
+  "demand_roll_mean_168h_lag_48h",
 ]
 
 TARGET_COL = "demand_mwh"
 
-_ROLL_SPEC = ("demand_roll_mean_168h_lag_24h", 168, 24)
+DAILY_BLOCK_HOURS = 24
+
+_LAG_SPECS = [
+  ("demand_lag_48h", 48),
+  ("demand_lag_168h", 168),
+  ("demand_lag_336h", 336),
+]
+
+_ROLL_SPEC = ("demand_roll_mean_168h_lag_48h", 168, 48)
+
 
 def _cyclical(series: pd.Series, period: int) -> tuple[pd.Series, pd.Series]:
   """Encode a cyclic integer feature as sin/cos so 23:00 is 'close to' 00:00."""
   radians = 2 * np.pi * series / period
   return np.sin(radians), np.cos(radians)
 
+def min_safe_lag(horizon_hours: int, block_hours: int = DAILY_BLOCK_HOURS) -> int:
+  """Minimum demand lag that is leakage-safe for EVERY hour of a daily day-ahead block forecast.
+  The latest target hour is (horizon + block -1) hours after issue time.
+  A lag L makes source = target - L. For the latest target this must be <= issue time, i.e. L >= horizon + block -1. We use horizon + block as a conservative integar bound.
+  """
+  return horizon_hours + block_hours
+
 
 def build_features(df: pd.DataFrame, horizon_hours: int = 24) -> pd.DataFrame:
   """Transform raw long-format rows into a model-ready feature frame.
-
-  Args:
-    df: raw rows for ONE region, containing REQUIRED_COLS.
-    horizon_hours: forecast horizon. Any lag shorter than this is unsafe at forecast time and will raise a ValueError. This makes the leakage rule a hard constraint, not a convention.
 
   Lag featurs are computed by looking demand up in TIME space (not row space), so data gaps cannot silently corrupt a "24h" lag into a "27h". Because every leag is >= horizon_hours, every feature value is knowable at forecast issue time. Rows whose lags fall before the start of available history (the first ~226h) will have NaN features and are dropped by split_X_y.
   
@@ -81,17 +87,20 @@ def build_features(df: pd.DataFrame, horizon_hours: int = 24) -> pd.DataFrame:
     raise ValueError(
       "build_features expects a single region. Group by region before calling."
     )
+  required_min = min_safe_lag(horizon_hours)
 
   for col, lag in _LAG_SPECS:
-    if lag < horizon_hours:
+    if lag < required_min:
       raise ValueError(
-        f"Unsafe lag '{col}' ({lag}h) < horizon ({horizon_hours}h)."
-        "This would leak future information at forecast time."
+        f"Unsafe lag '{col}' ({lag}h) < minimum safe lag "
+        f"({required_min}h = horizon {horizon_hours}h + block "
+        f"{DAILY_BLOCK_HOURS}h). Leaks for later hours of the block."
       )
-  _, _roll_window, _roll_lag = _ROLL_SPEC
-  if _roll_lag < horizon_hours:
+  _, _rw, _roll_lag = _ROLL_SPEC
+  if _roll_lag < required_min:
     raise ValueError(
-      f"Unsafe rolling lag {_roll_lag}h < horizon ({horizon_hours}h)."
+      f"Unsafe rolling lag {_roll_lag}h < minimum safe lag "
+      f"({required_min}h)."
     )
 
   d = df.sort_values("period_utc").reset_index(drop=True)

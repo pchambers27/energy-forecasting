@@ -1,0 +1,14 @@
+artifact_uri: file:///home/runner/workspace/mlruns/490823790156713389/b62812c9245f42f89f7585ee7b0361c9/artifacts
+end_time: 1779140002988
+entry_point_name: ''
+experiment_id: '490823790156713389'
+lifecycle_stage: active
+run_id: b62812c9245f42f89f7585ee7b0361c9
+run_name: gbm__SWPP
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779140002977
+status: 3
+tags: []
+user_id: runner

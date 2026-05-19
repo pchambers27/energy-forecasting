@@ -26,7 +26,14 @@ def load() -> pd.DataFrame:
     con.close()
     return df
 
-def audit_one_split(df: pd.DataFrame, region: str = "ERCO", fold: int = 0) -> bool:
+def issue_time_for_target(target: pd.Timestamp, test_start: pd.Timestamp) -> pd.Timestamp:
+    """Issue time of the daily day-ahead forecast covering 'target'.
+    Forecast for each calendar day is issued HORIZON hours before that day's first test hour. Daily grid anchored to test_start's time of day."""
+    delta_days = (target.normalize() - test_start.normalize()).days
+    day_first_hour = test_start + pd.Timedelta(days=delta_days)
+    return day_first_hour - pd.Timedelta(hours=HORIZON)
+
+def audit_one_split(df: pd.DataFrame, region: str, fold: int = 0) -> bool:
     splits = [s for s in make_splits(
         df, horizon_hours=HORIZON, test_window_hours=168, n_folds=12
     ) if s.region == region and s.fold == fold]
@@ -34,10 +41,9 @@ def audit_one_split(df: pd.DataFrame, region: str = "ERCO", fold: int = 0) -> bo
         print(f"No split for {region} fold {fold}")
         return False
     split = splits[0]
-    issue_time = split.test_start - pd.Timedelta(hours=HORIZON)
     print(f"Split: {split}")
-    print(f"Forecast issue time (latest data allowed): {issue_time}")
     print(f"Test window: {split.test_start} -> {split.test_end}")
+    print(f"Protocol: daily re-issued day-ahead (issue = day_start - {HORIZON}h)")
     print ()
 
     region_df = df[df["region"] == region].copy()
@@ -46,46 +52,55 @@ def audit_one_split(df: pd.DataFrame, region: str = "ERCO", fold: int = 0) -> bo
     (feats["period_utc"] >= split.test_start) & (feats["period_utc"] <= split.test_end)
     ]
     lag_map = {
-        "demand_lag_24h": 24,
+        "demand_lag_48h": 48,
         "demand_lag_168h": 168,
         "demand_lag_336h": 336,
     }
     raw = region_df.set_index("period_utc")["demand_mwh"]
     raw = raw[~raw.index.duplicated(keep="last")].sort_index()
 
-    all_ok = True
     violations = 0
-    check = 0
+    mismatches = 0
+    checked = 0
+    all_ok = True
 
     for _, row in test_feats.iterrows():
         target = row["period_utc"]
+        issue = issue_time_for_target(target, split.test_start)
         for col, lag in lag_map.items():
             src_ts = target - pd.Timedelta(hours=lag)
             checked += 1
-            if src_ts > issue_time:
+            if src_ts > issue:
                 violations += 1
                 all_ok = False
                 if violations <= 5:
-                    print(f" LEAK: target {target} feature {col}" 
-                          f"uses src {src_ts} > issue {issue_time}")
-                if src_ts in raw.index:
-                    expected = raw.loc[src_ts]
-                    got = row[col]
-                    if pd.notna(got) and abs(got - expected) > 1e-6:
-                        print(f" MISMATCH: {col} at {target}: feat={got} raw={expected}")
+                    print(f" LEAK: target {target} feature {col} src {src_ts} > issue {issue}")
+                if src_ts in raw.index and pd.notna(row[col]):
+                    if abs(row[col] - raw.loc[src_ts]) > 1e-6:
+                        mismatches += 1
                         all_ok = False
+                        if mismatches <= 5:
+                            print(f" MISMATCH: {col} at {target}: "
+                                  f" feat={row[col]} raw={raw.loc[src_ts]}")
 
-    earliest_roll_src = split.test_start - pd.Timedelta(hours=24)
-    print(f"\nRolling feature newest contributing hour (earliest target): "
-          f"{earliest_roll_src} (must be <= {issue_time})")
-    if earliest_roll_src > issue_time:
-        print(f" LEAK: rolling window extends beyond issue time")
-        all_ok = False
+    
 
-    print(f"\nChecked {checked} lag features instances across "
-          f"{len(test_feats)} test rows.")
-    print(f"Violations: {violations}")
-    print("RESULT:", "PASS - no leakage detected" if all_ok else "FAIL - leakage detected")
+    roll_ok = True
+    for _, row in test_feats.iterrows():
+        target = row["period_utc"]
+        issue = issue_time_for_target(target, split.test_start)
+        newest_roll_src = target - pd.Timedelta(hours=48)
+        if newest_roll_src > issue:
+            roll_ok = False
+            all_ok = False
+            print(f" ROLL LEAK: target {target} newest src {newest_roll_src} "
+                  f"> issue {issue}")
+            break
+    print(f"\nChecked {checked} lag features instances over "
+          f"{len(test_feats)} test rows")
+    print(f"Lag violations: {violations} | value mismatches: {mismatches}"
+          f"| rolling: {'OK' if roll_ok else 'LEAK'}")
+    print("RESULT:", "PASS - no leakage under daily re-issue" if all_ok else "FAIL - leakage found")
     return all_ok
 
 def main():

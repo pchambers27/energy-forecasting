@@ -1,0 +1,14 @@
+artifact_uri: file:///home/runner/workspace/mlruns/490823790156713389/42b8033eb14941de9a25e70c598cae88/artifacts
+end_time: 1779140002960
+entry_point_name: ''
+experiment_id: '490823790156713389'
+lifecycle_stage: active
+run_id: 42b8033eb14941de9a25e70c598cae88
+run_name: ridge__ERCO
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779140002948
+status: 3
+tags: []
+user_id: runner
